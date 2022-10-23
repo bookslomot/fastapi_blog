@@ -18,5 +18,3 @@ class PostList(PostBase):
 class PostCreate(PostBase):
     pass
 
-
-

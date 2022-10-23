@@ -1,15 +1,13 @@
-from fastapi_users.db import SQLAlchemyBaseUserTable, SQLAlchemyUserDatabase
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
-from sqlalchemy import Column, String, Integer, DateTime, Boolean
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Integer
 
 from core.db import Base
 
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
-    id = Column(UUID, primary_key=True)
-    name = Column(String, unique=True)
-    date = Column(DateTime)
+class UserDB(Base):
 
+    __tablename__ = 'user'
 
-users = User.__table__
+    id = Column(Integer, primary_key=True, index=type, unique=True)
+    username = Column(String, unique=True)
+    password = Column(String)
+

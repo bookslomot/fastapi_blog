@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from core.db import Base
-from user.models import User
+from user.models import UserDB
 
 
 class Post(Base):
@@ -12,5 +12,4 @@ class Post(Base):
     text = Column(String(length=350))
     date = Column(DateTime)
     user = Column(Integer, ForeignKey('user.id'))
-    user_id = relationship(User)
-
+    user_id = relationship(UserDB)

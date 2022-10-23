@@ -16,7 +16,3 @@ def post_lst(db: Session = Depends(get_db)):
 @router.post('/')
 def post_list(item: PostCreate, db: Session = Depends(get_db)):
     return service.creat_post(db, item)
-
-
-
-
