@@ -1,7 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+
 from core.utils import get_db
+from user.models import UserDB
 from . import service
 from .schemas import PostCreate, PostList
 
@@ -9,10 +10,10 @@ router = APIRouter()
 
 
 @router.get('/', response_model=List[PostList])
-def post_lst(db: Session = Depends(get_db)):
-    return service.get_post_list(db)
+async def post_lst():
+    return await service.get_post_list()
 
 
 @router.post('/')
-def post_list(item: PostCreate, db: Session = Depends(get_db)):
-    return service.creat_post(db, item)
+async def post_create(item: PostCreate):
+    return await service.creat_post(item)

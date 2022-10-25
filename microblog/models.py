@@ -1,7 +1,6 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, sql
+from sqlalchemy.orm import relationship, backref
 from core.db import Base
-from user.models import UserDB
 
 
 class Post(Base):
@@ -9,7 +8,12 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     title = Column(String)
-    text = Column(String(length=350))
-    date = Column(DateTime)
+    text = Column(String(350))
+    date = Column(DateTime(timezone=True), server_default=sql.func.now())
     user = Column(Integer, ForeignKey('user.id'))
-    user_id = relationship(UserDB)
+    user_id = relationship('UserDB')
+    parent_id = Column(Integer, ForeignKey('microblog_posts.id'), nullable=True)
+    children = relationship('Post', backref=backref('parent', remote_side=[id]))
+
+
+posts = Post.__table__
