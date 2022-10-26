@@ -1,11 +1,12 @@
-from fastapi import Depends, HTTPException, Security
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from core.db import database
 from core.utils import get_db
 from user import schemas
 from user.handlers import Auth
-from user.models import UserDB
+from user.models import UserDB, users
 from user.schemas import User
 
 security = HTTPBearer()
@@ -15,20 +16,17 @@ auth_handler = Auth()
 class CRUDUser:
 
     @staticmethod
-    def get_user_by_username(db: Session, username: str):
-        return db.query(UserDB).filter(UserDB.username == username).first()
+    async def get_user_by_username(username: str):
+        return await database.fetch_one(query=users.select().where(users.c.username == username))
 
     @staticmethod
-    def get_all_users(db: Session):
-        return db.query(UserDB).all()
+    async def get_all_users():
+        return await database.fetch_all(query=users.select())
 
     @staticmethod
-    def sign_user(db: Session, user: dict):
-        db_user = UserDB(username=user['username'], password=user['password'])
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
+    async def sign_user(user: schemas.User):
+        sign_user = users.insert().values(**user.dict())
+        return await database.execute(sign_user)
 
     @staticmethod
     def create_user(db: Session, user: schemas.User):
@@ -42,25 +40,29 @@ class CRUDUser:
 class UserEndpoints:
 
     @staticmethod
-    def signup(user_details: schemas.User, db: Session = Depends(get_db)):
-        if CRUDUser.get_user_by_username(db, user_details.username) is not None:
-            return 'Account already exists'
+    async def signup(user_details: schemas.User):
+        user = await CRUDUser.get_user_by_username(user_details.username)
+        if user is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='User already exist'
+            )
         try:
             hashed_password = auth_handler.encode_password(user_details.password)
-            user = {'username': user_details.username, 'password': hashed_password}
-            return CRUDUser.sign_user(db, user)
+            user_details.password = hashed_password
+            return await CRUDUser.sign_user(user_details)
         except:
             return 'Failed to signup user'
 
     @staticmethod
-    def login(user_details: schemas.User, db: Session = Depends(get_db)):
-        user = CRUDUser.get_user_by_username(db, user_details.username)
+    async def login(user_details: schemas.User):
+        user = await CRUDUser.get_user_by_username(user_details.username)
         if user is None:
             return HTTPException(status_code=401, detail='Invalid Username')
         if not auth_handler.verify_password(user_details.password, user.password):
             return HTTPException(status_code=401, detail='Invalid Password')
-        access_token = auth_handler.encode_token(user.username)
-        refresh_token = auth_handler.encode_refresh_token(user.username)
+        access_token = auth_handler.create_access_token(user.username)
+        refresh_token = auth_handler.create_refresh_token(user.username)
         return {'access_token': access_token, 'refresh_token': refresh_token}
 
     @staticmethod

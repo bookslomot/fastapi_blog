@@ -12,13 +12,13 @@ router = APIRouter()
 
 
 @router.post('/signup')
-def signup(user_details: schemas.User, db: Session = Depends(get_db)):
-    return UserEndpoints.signup(user_details, db)
+async def signup(user_details: schemas.User):
+    return await UserEndpoints.signup(user_details)
 
 
 @router.post('/login')
-def login(user_details: schemas.User, db: Session = Depends(get_db)):
-    return UserEndpoints.login(user_details, db)
+def login(user_details: schemas.User):
+    return UserEndpoints.login(user_details)
 
 
 @router.get('/refresh_token')
@@ -42,5 +42,5 @@ def get_user(username: str, db: Session = Depends(get_db)):
 
 
 @router.get('/get-users')
-def get_users(db: Session = Depends(get_db)):
-    return CRUDUser.get_all_users(db)
+async def get_users():
+    return await CRUDUser.get_all_users()

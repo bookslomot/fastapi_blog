@@ -1,8 +1,6 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from core.utils import get_db
-from user.models import UserDB
 from . import service
 from .schemas import PostCreate, PostList
 
